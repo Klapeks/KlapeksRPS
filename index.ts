@@ -5,7 +5,7 @@ import RockPaperScissors from "./scripts/rock_paper_scissors";
 
 const TelegramAPI = require('node-telegram-bot-api');
 
-const token = '2022490336:AAF5F530jp3EDHOnzxan3r8w5gvL3u6_jKo';
+const token = '....';
 
 const bot: TelegramBot = new TelegramAPI(token, {polling: true});
 let bot_mention = "@"; bot.getMe().then(un => {
