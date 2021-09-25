@@ -101,7 +101,9 @@ let RockPaperScissors = {
                                         questionText = questionText.substr(0, questionText.length-1);
                                     }
                                 }
-                                await bot.editMessageText(how + `\n${questionText}: ${BotCommands.generateMention(user.user.first_name, user.user.id)}`, {
+                                if (!user.id) user.id = user.user.id;
+                                if (!user.first_name) user.first_name = user.user.first_name;
+                                await bot.editMessageText(how + `\n${questionText}: ${BotCommands.generateMention(user.first_name, user.id)}`, {
                                     chat_id: msg.message.chat.id,
                                     message_id: msg.message.message_id,
                                     parse_mode: "HTML"
