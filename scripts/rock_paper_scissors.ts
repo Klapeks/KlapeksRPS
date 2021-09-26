@@ -1,5 +1,4 @@
 import TelegramBot from "node-telegram-bot-api";
-import { from } from "request/node_modules/form-data";
 import BotCommands from "./bot_commands";
 
 const keyboradInvite = {
@@ -25,18 +24,33 @@ const questions = ["кто","кого","кем","кому"];
 let invites: any = {}; // id: to
 
 function getKmnByFromer(chatId: string | number, username_from: number): any {
-    let user_to: any;
     let a = invites[chatId];
     if (!a) a = invites[chatId] + '';
-    if (!a) return user_to;
+    if (!a) return;
 
-    Object.keys(a).forEach((key: any) => {
-        if (a[key] && a[key].from === username_from){
-            if (user_to) return;
-            user_to = key;
+    for (const key in a) {
+        if (a[key]){
+            if (a[key].from === username_from){
+                return key;
+            }
         }
-    });
-    return user_to;
+    }
+    return;
+}
+async function getKmnByFromerUsingString(bot: TelegramBot, chatId: string | number, username_from: string): Promise<any> {
+    let a = invites[chatId];
+    if (!a) a = invites[chatId] + '';
+    if (!a) return;
+    for (const key in a) {
+        if (a[key]){
+            if (a[key].from === username_from){
+                return key;
+            } else if ((await BotCommands.getUser(bot, a[key].from))?.username === username_from){
+                return key;
+            }
+        }
+    }
+    return;
 }
 function getId(user: any) {
     return user.username ? user.username.toLowerCase() : user.id;
@@ -210,9 +224,13 @@ let RockPaperScissors = {
                     return;
                 }
                 
+                if (invites[chatId] && (invites[chatId][msg.from.username.toLowerCase()] || getKmnByFromer(chatId, msg.from.id))) {
+                    await bot.sendMessage(chatId, "Вы или вас уже пригласили");
+                    return;
+                }
                 let questionText: string = "-";
 
-                let user_to = {username: "-", first_name: "-", id: "-"};
+                let user_to = {username: "-", first_name: "-", id: "-", is_bot: false};
                 if (msg.reply_to_message) { // Reply
                     user_to = msg.reply_to_message.from;
                 }
@@ -221,7 +239,8 @@ let RockPaperScissors = {
                     user_to = {
                         username: args[0],
                         first_name: args[0],
-                        id: "@" + args[0]
+                        id: "@" + args[0],
+                        is_bot: (await bot.getMe()).username === args[0]
                     };
                     delete args[0];
                 }
@@ -244,21 +263,23 @@ let RockPaperScissors = {
                 questionText = BotCommands.arrayToString(args);
                 if (questionText) {
                     responseMessage += `\n${questionText}`;
-                    
-                    // let q = questionText.split(' ')[0].toLowerCase();
-                    // if (questions.includes(q)){
-                    //     questionText = questionText.substr(q.length+1);
-                    // }
                     questionText = questionText.substr(0,1).toUpperCase() + questionText.substr(1);
-                    // if (questionText.endsWith("?")) {
-                    //     questionText = questionText.substr(0, questionText.length-1);
-                    // }
                 } else {
                     questionText = "-noquestion";
                 }
                 if (!user_to.username) user_to.username = "i"+user_to.id;
 
                 if (!invites[chatId]) invites[chatId] = [];
+                {
+                    if (user_to.is_bot == true) {
+                        await bot.sendMessage(chatId, "Сори меня незя пригласить :(");
+                        return;
+                    }
+                    if (invites[chatId][user_to.username.toLowerCase()] || await getKmnByFromerUsingString(bot, chatId, user_to.id)){
+                        await bot.sendMessage(chatId, "Этот игрок уже приглашен или пригласил кого-то");
+                        return;
+                    }
+                }
                 invites[chatId][user_to.username.toLowerCase()] = {
                     status: 'invite',
                     from: msg.from.id,
