@@ -108,6 +108,8 @@ let RockPaperScissors = {
                                     message_id: msg.message.message_id,
                                     parse_mode: "HTML"
                                 });
+                                delete invites[chatId][e];
+                                return;
                             }
                             if (mystatus === status) {
                                 await bot.editMessageText("Победила дружба :)", {
@@ -180,6 +182,10 @@ let RockPaperScissors = {
                 else if (args[0].toLowerCase() === 'принять') {
                     if (invites[msg.chat.id] && invites[msg.chat.id][msg.from.username.toLowerCase()]) {
                         let aboba = invites[msg.chat.id][msg.from.username.toLowerCase()];
+                        if (!(aboba.status === 'invite')) {
+                            await bot.sendMessage(chatId, 'Игра уже запущена и не может быть отклонена!');
+                            return;
+                        }
                         let fromuser = await BotCommands.getUser(bot, aboba.from);
 
                         let responseText = `${BotCommands.generateMention(msg.from.first_name, msg.from.id)} и ` + 
@@ -191,7 +197,7 @@ let RockPaperScissors = {
                         aboba.status = "ingame";
                         await bot.sendMessage(chatId, responseText, {parse_mode: "HTML", reply_markup: keyboradRPS});
                     } else {
-                        await bot.sendMessage(chatId, 'Игры не существует');
+                        await bot.sendMessage(chatId, 'Игры не существует либо она не с вами');
                     }
                     return;
                 }
