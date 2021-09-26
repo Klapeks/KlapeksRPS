@@ -48,6 +48,7 @@ let RockPaperScissors = {
             command: "rps",
             callback: async (bot: TelegramBot, msg: any, args: string[]) => {
                 let chatId = msg.message.chat.id;
+                if (!msg.from.username) msg.from.username = "i"+msg.from.id;
                 if (!invites[chatId]) return;
 
                 let e: any;
@@ -57,7 +58,7 @@ let RockPaperScissors = {
                     } else {
                         e = getKmnByFromer(chatId, msg.from.id)?.toLowerCase();
                     }
-                } 
+                }
                 
                 if (args[0] === "dogame") {
                     if (e && invites[chatId][e]) {
@@ -80,11 +81,11 @@ let RockPaperScissors = {
                             return;
                         } else if (status.startsWith("hit")) {
                             let userid = status.split(' ')[2];
-                            // if (userid == msg.from.id) {
-                            //     console.log("ahaha nezya");
-                            //     await bot.answerCallbackQuery(msg.id);
-                            //     return;
-                            // }
+                            if (userid == msg.from.id) {
+                                console.log("ahaha nezya");
+                                await bot.answerCallbackQuery(msg.id);
+                                return;
+                            }
                             status = status.split(' ')[1];
                             let mystatus = args[1];
                             async function doWon(user: any, how: string) {
@@ -109,6 +110,7 @@ let RockPaperScissors = {
                                     parse_mode: "HTML"
                                 });
                                 delete invites[chatId][e];
+                                if (Object.keys(invites[chatId]).length === 0) delete invites[chatId];
                                 return;
                             }
                             if (mystatus === status) {
@@ -155,19 +157,21 @@ let RockPaperScissors = {
             alias: ["кнб", "кмн", "rps", "kmn", "knb"],
             command: async (bot: TelegramBot, msg: any, args: string[]) => {
                 const chatId = msg.chat.id;
+                if (!msg.from.username) msg.from.username = "i"+msg.from.id;
 
                 if (args[0].toLowerCase() === 'отклонить') {
                     let e: any;
-                    if (invites[msg.chat.id]) {
-                        if (invites[msg.chat.id][msg.from.username.toLowerCase()]) {
+                    if (invites[chatId]) {
+                        if (invites[chatId][msg.from.username.toLowerCase()]) {
                             e = msg.from.username.toLowerCase();
                         } else {
-                            e = getKmnByFromer(msg.chat.id, msg.from.id)?.toLowerCase();
+                            e = getKmnByFromer(chatId, msg.from.id)?.toLowerCase();
                         }
                     }
-                    if (e && invites[msg.chat.id][e]) {
-                        if (invites[msg.chat.id][e].status === 'invite') {
-                            delete invites[msg.chat.id][e];
+                    if (e && invites[chatId][e]) {
+                        if (invites[chatId][e].status === 'invite') {
+                            delete invites[chatId][e];
+                            if (Object.keys(invites[chatId]).length === 0) delete invites[chatId];
                             await bot.sendMessage(chatId, 'Игра была отклонена');
                             return;
                         } else {
@@ -180,8 +184,8 @@ let RockPaperScissors = {
                     }
                 }
                 else if (args[0].toLowerCase() === 'принять') {
-                    if (invites[msg.chat.id] && invites[msg.chat.id][msg.from.username.toLowerCase()]) {
-                        let aboba = invites[msg.chat.id][msg.from.username.toLowerCase()];
+                    if (invites[chatId] && invites[chatId][msg.from.username.toLowerCase()]) {
+                        let aboba = invites[chatId][msg.from.username.toLowerCase()];
                         if (!(aboba.status === 'invite')) {
                             await bot.sendMessage(chatId, 'Игра уже запущена и не может быть отклонена!');
                             return;
@@ -201,7 +205,7 @@ let RockPaperScissors = {
                     }
                     return;
                 }
-                else if (args[0].toLowerCase() === 'list'){
+                else if (args[0].toLowerCase() === 'list') {
                     console.log(invites);
                     return;
                 }
@@ -252,6 +256,7 @@ let RockPaperScissors = {
                 } else {
                     questionText = "-noquestion";
                 }
+                if (!user_to.username) user_to.username = "i"+user_to.id;
 
                 if (!invites[chatId]) invites[chatId] = [];
                 invites[chatId][user_to.username.toLowerCase()] = {

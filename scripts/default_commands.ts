@@ -34,11 +34,16 @@ let DefaultCommands = {
         });
         BotCommands.addCommand({
             alias: [".close", ".r"],
-            command: (bot: TelegramBot, msg: any, args: string[]) => {
-                console.log("\n\n\n\n\n\n\n\n\n\n\n\n\nRestarting....");
-                setTimeout(function() {
-                    process.exit();
-                }, 1000);
+            command: async (bot: TelegramBot, msg: any, args: string[]) => {
+                if ((await bot.getChatMember(msg.chat.id, msg.from.id)).status === 'creator' || !(msg.chat.type === 'supergroup')){
+                    console.log("\n\n\n\n\n\n\n\n\n\n\n\n\n");
+                    console.log(msg);
+                    console.log("Restarting....");
+                    await bot.deleteMessage(msg.chat.id, msg.message_id)
+                    setTimeout(function() {
+                        process.exit();
+                    }, 1000);
+                }
             }
         });
     }
