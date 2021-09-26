@@ -245,9 +245,13 @@ let RockPaperScissors = {
                     delete args[0];
                 }
                 else if (msg.entities) {
+                    questionText = BotCommands.arrayToString(args);
                     msg.entities.forEach((el: any) => {
-                        if (el.type === 'text_mention') { // Упоминание текстом
-                            user_to = el.user;
+                        if (user_to.id === "-" || user_to.username === "-" || user_to.first_name === "-") {
+                            if (el.type === 'text_mention') { // Упоминание текстом
+                                user_to = el.user;
+                                if (el.offset === 4) questionText = questionText.substr(el.length + 1);
+                            }
                         }
                     });
                     if (user_to.id === "-" || user_to.username === "-" || user_to.first_name === "-") {
@@ -260,7 +264,7 @@ let RockPaperScissors = {
                     return true;
                 }
                 let responseMessage: string = `Эй, ${BotCommands.generateMention(user_to.first_name, user_to.id)}, тебя вызвали на камень-ножницы-бумага`;
-                questionText = BotCommands.arrayToString(args);
+                if (questionText === '-') questionText = BotCommands.arrayToString(args);
                 if (questionText) {
                     responseMessage += `\n${questionText}`;
                     questionText = questionText.substr(0,1).toUpperCase() + questionText.substr(1);
@@ -269,17 +273,19 @@ let RockPaperScissors = {
                 }
                 if (!user_to.username) user_to.username = "i"+user_to.id;
 
+                if (user_to.is_bot == true) {
+                    await bot.sendMessage(chatId, "Сори меня незя пригласить :(");
+                    return;
+                }
+
                 if (!invites[chatId]) invites[chatId] = [];
-                {
-                    if (user_to.is_bot == true) {
-                        await bot.sendMessage(chatId, "Сори меня незя пригласить :(");
-                        return;
-                    }
+                else {
                     if (invites[chatId][user_to.username.toLowerCase()] || await getKmnByFromerUsingString(bot, chatId, user_to.id)){
                         await bot.sendMessage(chatId, "Этот игрок уже приглашен или пригласил кого-то");
                         return;
                     }
                 }
+
                 invites[chatId][user_to.username.toLowerCase()] = {
                     status: 'invite',
                     from: msg.from.id,
